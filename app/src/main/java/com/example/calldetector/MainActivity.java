@@ -47,22 +47,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/NavinCallRecorder";
-
-        audioFile = new File(path);
-        if (!audioFile.exists()) {
-            audioFile.mkdirs();
-        }
-        File newfile=new File(audioFile,"kkj.txt");
-
-        try {
-            newfile.createNewFile();
-            Log.d("CreateNewFile", "New file created");
-        }
-        catch (Exception e)
-        {
-            Log.d("CreateNewFile", e.getMessage());
-        }
+//        String path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/NavinCallRecorder";
+//
+//        audioFile = new File(path);
+//        if (!audioFile.exists()) {
+//            audioFile.mkdirs();
+//        }
+//        File newfile=new File(audioFile,"kkj.txt");
+//
+//        try {
+//            newfile.createNewFile();
+//            Log.d("CreateNewFile", "New file created");
+//        }
+//        catch (Exception e)
+//        {
+//            Log.d("CreateNewFile", e.getMessage());
+//        }
 
 
     }

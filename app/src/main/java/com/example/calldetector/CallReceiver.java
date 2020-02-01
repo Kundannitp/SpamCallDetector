@@ -9,7 +9,10 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -17,6 +20,7 @@ import android.view.Gravity;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 
 import static android.content.Context.TELEPHONY_SERVICE;
 import static android.widget.Toast.LENGTH_LONG;
@@ -31,10 +35,11 @@ public class CallReceiver extends BroadcastReceiver{
     MediaRecorder recorder = new MediaRecorder();
 
     boolean isRecordStarted = false;
+    boolean isCallEnded = false;
 
     File audioFile;
 
-    int audioSource = MediaRecorder.AudioSource.VOICE_CALL;
+    int audioSource = MediaRecorder.AudioSource.DEFAULT;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -49,14 +54,14 @@ public class CallReceiver extends BroadcastReceiver{
              */
 
 
-//            try {
-//                startMediaRecorder(audioSource);
-//                Log.d("Navin call recorder LOG", "Everything is fine with starting of recorder");
-//            }
-//            catch (Exception e)
-//            {
-//                Log.d("Navin call recorder LOG", "Something went wrong while starting recorder");
-//            }
+            try {
+                new RecorderClass().onPreExecute();
+                Log.d("Navin call recorder LOG", "Everything is fine with starting of recorder");
+            }
+            catch (Exception e)
+            {
+                Log.d("Navin call recorder LOG", "Something went wrong while starting recorder");
+            }
 
 
             /**
@@ -81,12 +86,16 @@ public class CallReceiver extends BroadcastReceiver{
         else if(intent.getStringExtra(TelephonyManager.EXTRA_STATE).equals(TelephonyManager.EXTRA_STATE_IDLE)){
             showToast(context,"Call ended...");
 
-            isRecordStarted = false;
+            recorder.stop();
+            recorder.release();
+            recorder = null;
 
-            //recorder.stop();
+
         }
         else if(intent.getStringExtra(TelephonyManager.EXTRA_STATE).equals(TelephonyManager.EXTRA_STATE_RINGING)){
             showToast(context,"Incoming call...");
+
+
 //            inCall = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
 //            String s = findNameByNumber(inCall,context);
 ////            int n = inCall.length();
@@ -138,67 +147,96 @@ public class CallReceiver extends BroadcastReceiver{
      */
 
 
-    private void startMediaRecorder(final int audioSource){
+
+    public class RecorderClass extends AsyncTask<Void, Void, Void>
+    {
 
 
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/NavinCallRecorder";
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
 
-        audioFile = new File(path);
-        if (!audioFile.exists()) {
-            audioFile.mkdirs();
         }
-        File newfile=new File(audioFile,"kkj.txt");
 
-        try {
-            newfile.createNewFile();
-            Log.d("CreateNewFile", "New file created");
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            //doRecording();
+
+            return null;
         }
-        catch (Exception e)
-        {
-            Log.d("CreateNewFile", e.getMessage());
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+
+
+            new CountDownTimer(30000, 30000)
+            {
+
+                @Override
+                public void onTick(long l) {
+
+                    doRecording();
+
+                }
+
+                @Override
+                public void onFinish() {
+
+                    recorder.stop();
+                    recorder.release();
+                    recorder = null;
+
+                }
+            };
+
+
         }
-//
-//        try{
-//            recorder.reset();
-//            recorder.setAudioSource(audioSource);
-//            recorder.setAudioSamplingRate(8000);
-//            recorder.setAudioEncodingBitRate(12200);
-//            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-//            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-//            String fileName = audioFile.getAbsolutePath();
-//            recorder.setOutputFile(fileName);
-//
-//            MediaRecorder.OnErrorListener errorListener = new MediaRecorder.OnErrorListener() {
-//                public void onError(MediaRecorder arg0, int arg1, int arg2) {
-//                    Log.e(TAG, "OnErrorListener " + arg1 + "," + arg2);
-//                    //terminateAndEraseFile();
-//                }
-//            };
-//            recorder.setOnErrorListener(errorListener);
-//
-//            MediaRecorder.OnInfoListener infoListener = new MediaRecorder.OnInfoListener() {
-//                public void onInfo(MediaRecorder arg0, int arg1, int arg2) {
-//                    Log.e(TAG, "OnInfoListener " + arg1 + "," + arg2);
-//                    //terminateAndEraseFile();
-//                }
-//            };
-//            recorder.setOnInfoListener(infoListener);
-//
-//
-//            recorder.prepare();
-//            // Sometimes prepare takes some time to complete
-//            Thread.sleep(2000);
-//            recorder.start();
-//            isRecordStarted = true;
-//            return true;
-//        }catch (Exception e){
-//            e.getMessage();
-//            return false;
-//        }
+
+        public void doRecording()
+        {String path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/NavinCallRecorder";
+
+            audioFile = new File(path);
+            if (!audioFile.exists()) {
+                audioFile.mkdirs();
+            }
+
+            try{
+
+
+                String fileName = audioFile.getAbsolutePath();
+                fileName += "/callTest.mp3";
+
+                recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                recorder.setOutputFile(fileName);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+
+                try {
+                    recorder.prepare();
+                } catch (IOException e) {
+                    Log.e("Media recorder failed", "prepare() failed");
+                }
+
+                //Thread.sleep(2000);
+
+                try {
+                    recorder.start();
+                } catch (Exception e) {
+                    Log.e("Media recorder failed", "start() failed");
+                }
+
+                isRecordStarted = true;
+            }catch (Exception e){
+                Log.d("Exception", e.getMessage());
+            }
+
+        }
 
 
     }
-
 
 
 }
