@@ -2,7 +2,10 @@ package com.example.calldetector;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,7 +15,16 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.File;
+
 public class MainActivity extends AppCompatActivity {
+
+
+    MediaRecorder recorder = new MediaRecorder();
+
+    boolean isRecordStarted = false;
+
+    File audioFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +45,26 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_PHONE_STATE},1);
         }
+
+
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/NavinCallRecorder";
+
+        audioFile = new File(path);
+        if (!audioFile.exists()) {
+            audioFile.mkdirs();
+        }
+        File newfile=new File(audioFile,"kkj.txt");
+
+        try {
+            newfile.createNewFile();
+            Log.d("CreateNewFile", "New file created");
+        }
+        catch (Exception e)
+        {
+            Log.d("CreateNewFile", e.getMessage());
+        }
+
+
     }
 
     @Override
